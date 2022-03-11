@@ -51,3 +51,8 @@ service-account-csr.json
 ubuntu-bionic*.log
 .vagrant
 temp
+vagrant/ssh/
+encryption-config.yaml
+vagrant/ubuntu/lab_automation/CA/
+vagrant/ssh/authorized_keys/
+authorized_keys

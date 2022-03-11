@@ -1,6 +1,8 @@
+Previous: [Generating the Data Encryption Config and Key](06-data-encryption-keys.md)
+
 # Bootstrapping the etcd Cluster
 
-Kubernetes components are stateless and store cluster state in [etcd](https://github.com/coreos/etcd). In this lab you will bootstrap a two node etcd cluster and configure it for high availability and secure remote access.
+Kubernetes components are stateless and store cluster state in [etcd](https://github.com/etcd-io/etcd). In this lab you will bootstrap a two node etcd cluster and configure it for high availability and secure remote access.
 
 ## Prerequisites
 
@@ -14,28 +16,29 @@ The commands in this lab must be run on each controller instance: `master-1`, an
 
 ### Download and Install the etcd Binaries
 
-Download the official etcd release binaries from the [coreos/etcd](https://github.com/coreos/etcd) GitHub project:
+Download the official etcd release binaries from the [coreos/etcd](https://github.com/etcd-io/etcd) GitHub project and install it:
 
 ```
-wget -q --show-progress --https-only --timestamping \
-  "https://github.com/coreos/etcd/releases/download/v3.3.9/etcd-v3.3.9-linux-amd64.tar.gz"
+ETCD_VER=`wget https://github.com/etcd-io/etcd/releases/latest 2>&1 | grep "Location.*releases/tag/" | cut -d " " -f2 | sed 's/^.*\///'`
+echo $ETCD_VER
+rm latest
+DOWNLOAD_URL=https://github.com/etcd-io/etcd/releases/download
+
+curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+
+tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/
+rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+cp /tmp/etcd-${ETCD_VER}-linux-amd64/etcd* /usr/local/bin/
 ```
 
-Extract and install the `etcd` server and the `etcdctl` command line utility:
-
-```
-{
-  tar -xvf etcd-v3.3.9-linux-amd64.tar.gz
-  sudo mv etcd-v3.3.9-linux-amd64/etcd* /usr/local/bin/
-}
-```
 
 ### Configure the etcd Server
 
 ```
 {
-  sudo mkdir -p /etc/etcd /var/lib/etcd
-  sudo cp ca.crt etcd-server.key etcd-server.crt /etc/etcd/
+  mkdir -p /etc/etcd /var/lib/etcd
+  cd ~
+  cp ca.crt etcd-server.key etcd-server.crt /etc/etcd/
 }
 ```
 
@@ -120,3 +123,5 @@ sudo ETCDCTL_API=3 etcdctl member list \
 Reference: https://kubernetes.io/docs/tasks/administer-cluster/configure-upgrade-etcd/#starting-etcd-clusters
 
 Next: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)
+
+Previous: [Generating the Data Encryption Config and Key](06-data-encryption-keys.md)

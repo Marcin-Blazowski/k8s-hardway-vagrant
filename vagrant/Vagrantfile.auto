@@ -6,6 +6,7 @@
 NUM_MASTER_NODE = 2
 NUM_WORKER_NODE = 2
 
+# These seems to be dynamic but you will have to tune manual steps in case IP addreses change
 IP_NW = "192.168.5."
 MASTER_IP_START = 10
 NODE_IP_START = 20
@@ -58,14 +59,20 @@ Vagrant.configure("2") do |config|
       config.vm.define "master-#{i}" do |node|
         # Name shown in the GUI
         node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubernetes-ha-master-#{i}"
+            vb.name = "k8s-ha-master-#{i}"
             vb.memory = 2048
+            #vb.customize ["modifyvm", :id, "--paravirtprovider", "minimal"]
             vb.cpus = 2
         end
         node.vm.hostname = "master-#{i}"
         node.vm.network :private_network, ip: IP_NW + "#{MASTER_IP_START + i}"
         node.vm.network "forwarded_port", guest: 22, host: "#{2710 + i}"
 
+        #node.vm.provision "disable-lxd-control-plane", type: "shell", :path => "blazo/disable_lxd_control_plane.sh",
+        #  run: "always"
+
+        # enp0s8 is a standard id of the network interface provided by Virtualbox on Ubuntu
+        # this name is also used in some parts of k8s cluster configuration for IP address discovery
         node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
           s.args = ["enp0s8"]
         end
@@ -73,25 +80,39 @@ Vagrant.configure("2") do |config|
         node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
         node.vm.provision "file", source: "./ubuntu/cert_verify.sh", destination: "$HOME/"
 
+        node.vm.provision "grant-ssh", type: "shell", :path => "ubuntu/lab_automation/grant_ssh.sh"
+        node.vm.provision "install-kubectl", type: "shell", :path => "ubuntu/lab_automation/install_kubectl.sh"
+        node.vm.provision "create-CA", type: "shell", :path => "ubuntu/lab_automation/create_CA.sh"
+        node.vm.provision "create-kube-configs", type: "shell", :path => "ubuntu/lab_automation/create_kube_configs.sh"
+        node.vm.provision "create-encryption-config", type: "shell", :path => "ubuntu/lab_automation/create_encryption_config.sh"
+
+        node.vm.provision "etcd_bootstrap", type: "shell", :path => "ubuntu/lab_automation/etcd_bootstrap.sh"
+        node.vm.provision "control_plane_bootstrap", type: "shell", :path => "ubuntu/lab_automation/control_plane_bootstrap.sh"
+        node.vm.provision "configure_admin_kubectl", type: "shell", :path => "ubuntu/lab_automation/configure_admin_kubectl.sh"
+        node.vm.provision "tls_master_config", type: "shell", :path => "ubuntu/lab_automation/tls_master_config.sh"
+
       end
   end
 
   # Provision Load Balancer Node
   config.vm.define "loadbalancer" do |node|
     node.vm.provider "virtualbox" do |vb|
-        vb.name = "kubernetes-ha-lb"
+        vb.name = "k8s-ha-lb"
         vb.memory = 512
+        #vb.customize ["modifyvm", :id, "--paravirtprovider", "minimal"]
         vb.cpus = 1
     end
     node.vm.hostname = "loadbalancer"
     node.vm.network :private_network, ip: IP_NW + "#{LB_IP_START}"
-	node.vm.network "forwarded_port", guest: 22, host: 2730
+	  node.vm.network "forwarded_port", guest: 22, host: 2730
 
     node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
       s.args = ["enp0s8"]
     end
 
     node.vm.provision "setup-dns", type: "shell", :path => "ubuntu/update-dns.sh"
+    
+    node.vm.provision "lb_bootstrap", type: "shell", :path => "ubuntu/lab_automation/lb_bootstrap.sh"
 
   end
 
@@ -99,13 +120,14 @@ Vagrant.configure("2") do |config|
   (1..NUM_WORKER_NODE).each do |i|
     config.vm.define "worker-#{i}" do |node|
         node.vm.provider "virtualbox" do |vb|
-            vb.name = "kubernetes-ha-worker-#{i}"
+            vb.name = "k8s-ha-worker-#{i}"
             vb.memory = 512
+            #vb.customize ["modifyvm", :id, "--paravirtprovider", "minimal"]
             vb.cpus = 1
         end
         node.vm.hostname = "worker-#{i}"
         node.vm.network :private_network, ip: IP_NW + "#{NODE_IP_START + i}"
-		node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
+		    node.vm.network "forwarded_port", guest: 22, host: "#{2720 + i}"
 
         node.vm.provision "setup-hosts", :type => "shell", :path => "ubuntu/vagrant/setup-hosts.sh" do |s|
           s.args = ["enp0s8"]
@@ -116,6 +138,22 @@ Vagrant.configure("2") do |config|
         node.vm.provision "allow-bridge-nf-traffic", :type => "shell", :path => "ubuntu/allow-bridge-nf-traffic.sh"
         node.vm.provision "file", source: "./ubuntu/cert_verify.sh", destination: "$HOME/"
 
+        node.vm.provision "grant-ssh", type: "shell", :path => "ubuntu/lab_automation/grant_ssh.sh"
+        node.vm.provision "install-kubectl", type: "shell", :path => "ubuntu/lab_automation/install_kubectl.sh"
+        node.vm.provision "create-kube-configs", type: "shell", :path => "ubuntu/lab_automation/create_kube_configs.sh"
+
+        node.vm.provision "configure_admin_kubectl", type: "shell", :path => "ubuntu/lab_automation/configure_admin_kubectl.sh"
+
+        node.vm.provision "node_bootstrap", type: "shell", :path => "ubuntu/lab_automation/node_bootstrap.sh"
+        node.vm.provision "tls_node_bootstrap", type: "shell", :path => "ubuntu/lab_automation/tls_node_bootstrap.sh"
+        
+        node.vm.provision "pod_networking", type: "shell", :path => "ubuntu/lab_automation/pod_networking.sh"
+        node.vm.provision "coredns_deploy", type: "shell", :path => "ubuntu/lab_automation/coredns_deploy.sh"
+        
+        node.vm.provision "kubelet_auth", type: "shell", :path => "ubuntu/lab_automation/kubelet_auth.sh"
+
+        node.vm.provision "smoke_tests", type: "shell", :path => "ubuntu/lab_automation/smoke_tests.sh"
     end
   end
+
 end

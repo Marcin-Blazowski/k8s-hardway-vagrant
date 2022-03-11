@@ -1,3 +1,5 @@
+Previous: [Deploy Pod Networking](12-configure-pod-networking.md)
+
 ## RBAC for Kubelet Authorization
 
 In this section you will configure RBAC permissions to allow the Kubernetes API Server to access the Kubelet API on each worker node. Access to the Kubelet API is required for retrieving metrics, logs, and executing commands in pods.
@@ -8,8 +10,8 @@ In this section you will configure RBAC permissions to allow the Kubernetes API 
 Create the `system:kube-apiserver-to-kubelet` [ClusterRole](https://kubernetes.io/docs/admin/authorization/rbac/#role-and-clusterrole) with permissions to access the Kubelet API and perform most common tasks associated with managing pods:
 
 ```
-cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
-apiVersion: rbac.authorization.k8s.io/v1beta1
+cat <<EOF | sudo tee cluster_role_nodes.yaml
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   annotations:
@@ -29,16 +31,19 @@ rules:
     verbs:
       - "*"
 EOF
+
+kubectl apply --kubeconfig admin.kubeconfig -f cluster_role_nodes.yaml
 ```
-Reference: https://v1-12.docs.kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
+
+Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#role-and-clusterrole
 
 The Kubernetes API Server authenticates to the Kubelet as the `system:kube-apiserver` user using the client certificate as defined by the `--kubelet-client-certificate` flag.
 
 Bind the `system:kube-apiserver-to-kubelet` ClusterRole to the `system:kube-apiserver` user:
 
 ```
-cat <<EOF | kubectl apply --kubeconfig admin.kubeconfig -f -
-apiVersion: rbac.authorization.k8s.io/v1beta1
+cat <<EOF | sudo tee cluster_role_binding_nodes.yaml
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: system:kube-apiserver
@@ -52,7 +57,12 @@ subjects:
     kind: User
     name: kube-apiserver
 EOF
+
+kubectl apply --kubeconfig admin.kubeconfig -f cluster_role_binding_nodes.yaml
 ```
+
 Reference: https://kubernetes.io/docs/reference/access-authn-authz/rbac/#rolebinding-and-clusterrolebinding
 
 Next: [DNS Addon](14-dns-addon.md)
+
+Previous: [Deploy Pod Networking](12-configure-pod-networking.md)
