@@ -1,4 +1,10 @@
+Previous: [Readme](../README.md)
+
 # Prerequisites
+
+## Some experience
+Nice to have: Some hands-on experience with VirtualBox and Vagrant.
+If you do not have you can get some while moving through this tutorial.
 
 ## VM Hardware Requirements
 
@@ -9,7 +15,7 @@
 
 Download and Install [VirtualBox](https://www.virtualbox.org/wiki/Downloads) on any one of the supported platforms:
 
- - Windows hosts
+ - Windows hosts (I have tested on Windows 10 + Virtualbox 6.1.32)
  - OS X hosts
  - Linux distributions
  - Solaris hosts
@@ -26,3 +32,7 @@ Download and Install [Vagrant](https://www.vagrantup.com/) on your platform.
 - Centos
 - Linux
 - macOS
+
+Next: [Compute resources](02-compute-resources.md)
+
+Previous: [Readme](../README.md)

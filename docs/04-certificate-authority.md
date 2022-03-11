@@ -1,34 +1,40 @@
+Previous: [Client tools](03-client-tools.md)
+
 # Provisioning a CA and Generating TLS Certificates
 
 In this lab you will provision a [PKI Infrastructure](https://en.wikipedia.org/wiki/Public_key_infrastructure) using the popular openssl tool, then use it to bootstrap a Certificate Authority, and generate TLS certificates for the following components: etcd, kube-apiserver, kube-controller-manager, kube-scheduler, kubelet, and kube-proxy.
 
 # Where to do these?
 
-You can do these on any machine with `openssl` on it. But you should be able to copy the generated files to the provisioned VMs. Or just do these from one of the master nodes.
+You can do these on any machine with `openssl` on it. But you should be able to copy the generated files to the provisioned VMs, or just do these from one of the master nodes.
 
 In our case we do it on the master-1 node, as we have set it up to be the administrative client.
 
 
 ## Certificate Authority
 
-In this section you will provision a Certificate Authority that can be used to generate additional TLS certificates.
+In this section you will provision a Certificate Authority certificates that can be used to generate additional TLS certificates.
+
+The author of the original tutorial decided to use <file-name>.crt for public keys and <file-name>.key for private keys. That was confusing for me. Please be aware about this naming convention.
 
 Create a CA certificate, then generate a Certificate Signing Request and use it to create a private key:
 
 
 ```
 # Create private key for CA
+mkdir $HOME/CA
+cd $HOME/CA
 openssl genrsa -out ca.key 2048
 
-# Comment line starting with RANDFILE in /etc/ssl/openssl.cnf definition to avoid permission issues
-sudo sed -i '0,/RANDFILE/{s/RANDFILE/\#&/}' /etc/ssl/openssl.cnf
+openssl rand -writerand $HOME/.rnd
 
 # Create CSR using the private key
 openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr
 
 # Self sign the csr using its own private key
-openssl x509 -req -in ca.csr -signkey ca.key -CAcreateserial  -out ca.crt -days 1000
+openssl x509 -req -in ca.csr -signkey ca.key -CAcreateserial -out ca.crt -days 1000
 ```
+
 Results:
 
 ```
@@ -36,7 +42,7 @@ ca.crt
 ca.key
 ```
 
-Reference : https://kubernetes.io/docs/concepts/cluster-administration/certificates/#openssl
+Reference : https://kubernetes.io/docs/tasks/administer-cluster/certificates/
 
 The ca.crt is the Kubernetes Certificate Authority certificate and ca.key is the Kubernetes Certificate Authority private key.
 You will use the ca.crt file in many places, so it will be copied to many places.
@@ -243,6 +249,8 @@ for instance in master-1 master-2; do
   scp ca.crt ca.key kube-apiserver.key kube-apiserver.crt \
     service-account.key service-account.crt \
     etcd-server.key etcd-server.crt \
+    kube-scheduler.key kube-scheduler.crt \
+    kube-controller-manager.key kube-controller-manager.crt \
     ${instance}:~/
 done
 ```
@@ -250,3 +258,5 @@ done
 > The `kube-proxy`, `kube-controller-manager`, `kube-scheduler`, and `kubelet` client certificates will be used to generate client authentication configuration files in the next lab. These certificates will be embedded into the client authentication configuration files. We will then copy those configuration files to the other master nodes.
 
 Next: [Generating Kubernetes Configuration Files for Authentication](05-kubernetes-configuration-files.md)
+
+Previous: [Client tools](03-client-tools.md)

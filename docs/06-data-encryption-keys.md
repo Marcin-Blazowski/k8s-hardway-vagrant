@@ -1,3 +1,5 @@
+Previous: [Generating Kubernetes Configuration Files for Authentication](05-kubernetes-configuration-files.md)
+
 # Generating the Data Encryption Config and Key
 
 Kubernetes stores a variety of data including cluster state, application configurations, and secrets. Kubernetes supports the ability to [encrypt](https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data) cluster data at rest.
@@ -40,7 +42,7 @@ for instance in master-1 master-2; do
 done
 ```
 
-Move `encryption-config.yaml` encryption config file to appropriate directory.
+Move `encryption-config.yaml` encryption config file to appropriate directory:
 
 ```
 for instance in master-1 master-2; do
@@ -51,3 +53,5 @@ done
 Reference: https://kubernetes.io/docs/tasks/administer-cluster/encrypt-data/#encrypting-your-data
 
 Next: [Bootstrapping the etcd Cluster](07-bootstrapping-etcd.md)
+
+Previous: [Generating Kubernetes Configuration Files for Authentication](05-kubernetes-configuration-files.md)

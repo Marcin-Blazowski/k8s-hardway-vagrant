@@ -1,8 +1,10 @@
-Previous: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)
+Previous: [TLS Bootstrapping Kubernetes Workers](10-tls-bootstrapping-kubernetes-workers.md)
 
-# Bootstrapping the Kubernetes Worker Nodes
+# Bootstrapping the 2nd Kubernetes Worker Node
 
-In this lab you will bootstrap 2 Kubernetes worker nodes. We already have [Docker](https://www.docker.com) installed on these nodes.
+If you have already running worker-2 bootstrapped with instructions in [TLS Bootstrapping Kubernetes Workers](10-bootstrapping-kubernetes-workers.md) you can skip this lab.
+
+In this lab you will bootstrap 2nd Kubernetes worker node. It does follow exactly the same actions like in [Bootstrapping Kubernetes Workers](09-bootstrapping-kubernetes-workers.md)
 
 We will now install the kubernetes components
 - [kubelet](https://kubernetes.io/docs/admin/kubelet)
@@ -11,7 +13,7 @@ We will now install the kubernetes components
 ## Prerequisites
 
 The Certificates and Configuration are created on `master-1` node and then copied over to workers using `scp`. 
-Once this is done, the commands are to be run on first worker instance: `worker-1`. Login to first worker instance using SSH Terminal.
+Once this is done, the commands are to be run on second worker instance: `worker-2`. Login to second worker instance using SSH Terminal.
 
 ### Provisioning Kubelet Client Certificates
 
@@ -23,7 +25,7 @@ Generate a certificate and private key for one worker node:
 
 ```
 cd $HOME/CA
-cat > openssl-worker-1.cnf <<EOF
+cat > openssl-worker-2.cnf <<EOF
 [req]
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
@@ -33,20 +35,20 @@ basicConstraints = CA:FALSE
 keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 subjectAltName = @alt_names
 [alt_names]
-DNS.1 = worker-1
-IP.1 = 192.168.5.21
+DNS.1 = worker-2
+IP.1 = 192.168.5.22
 EOF
 
-openssl genrsa -out worker-1.key 2048
-openssl req -new -key worker-1.key -subj "/CN=system:node:worker-1/O=system:nodes" -out worker-1.csr -config openssl-worker-1.cnf
-openssl x509 -req -in worker-1.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out worker-1.crt -extensions v3_req -extfile openssl-worker-1.cnf -days 1000
+openssl genrsa -out worker-2.key 2048
+openssl req -new -key worker-2.key -subj "/CN=system:node:worker-2/O=system:nodes" -out worker-2.csr -config openssl-worker-2.cnf
+openssl x509 -req -in worker-2.csr -CA ca.crt -CAkey ca.key -CAcreateserial  -out worker-2.crt -extensions v3_req -extfile openssl-worker-2.cnf -days 1000
 ```
 
 Results:
 
 ```
-worker-1.key
-worker-1.crt
+worker-2.key
+worker-2.crt
 ```
 
 ### The kubelet Kubernetes Configuration File
@@ -67,41 +69,41 @@ On master-1:
     --certificate-authority=ca.crt \
     --embed-certs=true \
     --server=https://${LOADBALANCER_ADDRESS}:6443 \
-    --kubeconfig=worker-1.kubeconfig
+    --kubeconfig=worker-2.kubeconfig
 
-  kubectl config set-credentials system:node:worker-1 \
-    --client-certificate=worker-1.crt \
-    --client-key=worker-1.key \
+  kubectl config set-credentials system:node:worker-2 \
+    --client-certificate=worker-2.crt \
+    --client-key=worker-2.key \
     --embed-certs=true \
-    --kubeconfig=worker-1.kubeconfig
+    --kubeconfig=worker-2.kubeconfig
 
   kubectl config set-context default \
     --cluster=kubernetes-the-hard-way \
-    --user=system:node:worker-1 \
-    --kubeconfig=worker-1.kubeconfig
+    --user=system:node:worker-2 \
+    --kubeconfig=worker-2.kubeconfig
 
-  kubectl config use-context default --kubeconfig=worker-1.kubeconfig
+  kubectl config use-context default --kubeconfig=worker-2.kubeconfig
 }
 ```
 
 Results:
 
 ```
-worker-1.kubeconfig
+worker-2.kubeconfig
 ```
 
 ### Copy certificates, private keys and kubeconfig files to the worker node:
 On master-1:
 ```
 cd $HOME/CA
-scp ca.crt worker-1.crt worker-1.key worker-1.kubeconfig worker-1:~/
+scp ca.crt worker-2.crt worker-2.key worker-2.kubeconfig worker-2:~/
 ```
 
 ### Download and Install Worker Binaries
 
-Going forward all activities are to be done on the `worker-1` node.
+Going forward all activities are to be done on the `worker-2` node.
 
-#### On worker-1:
+#### On worker-2:
 ```
 KUBE_VERSION=`curl -L -s https://dl.k8s.io/release/stable.txt`
 echo $KUBE_VERSION
@@ -137,7 +139,7 @@ Install the worker binaries:
 ```
 
 ### Configure the Kubelet
-#### On worker-1:
+#### On worker-2:
 Certificate files should be copied before from master-1 VM, and it should be already done if you followed previous steps.
 ```
 {
@@ -202,7 +204,7 @@ EOF
 ```
 
 ### Configure the Kubernetes Proxy
-#### On worker-1:
+#### On worker-2:
 ```
 sudo mv kube-proxy.kubeconfig /var/lib/kube-proxy/kubeconfig
 ```
@@ -223,7 +225,7 @@ EOF
 Create the `kube-proxy.service` systemd unit file:
 
 ```
-worker-1$ cat <<EOF | sudo tee /etc/systemd/system/kube-proxy.service
+worker-2$ cat <<EOF | sudo tee /etc/systemd/system/kube-proxy.service
 [Unit]
 Description=Kubernetes Kube Proxy
 Documentation=https://github.com/kubernetes/kubernetes
@@ -240,7 +242,7 @@ EOF
 ```
 
 ### Start the Worker Services
-#### On worker-1:
+#### On worker-2:
 ```
 {
   sudo systemctl daemon-reload
@@ -249,7 +251,7 @@ EOF
 }
 ```
 
-> Remember to run the above commands on worker node: `worker-1`
+> Remember to run the above commands on worker node: `worker-2`
 
 ## Verification
 #### On master-1:
@@ -264,18 +266,19 @@ kubectl get nodes --kubeconfig admin.kubeconfig
 
 ```
 NAME       STATUS     ROLES    AGE   VERSION
-worker-1   NotReady   <none>   93s   v1.23.4
+worker-1   NotReady   <none>   2h   v1.23.4
+worker-2   NotReady   <none>   93s   v1.23.4
 ```
 
 > Note: It is OK for the worker node to be in a NotReady state.
   That is because we haven't configured Networking yet.
 
-If case the node is not registered you can go back to worker-1 node and review kubelet logs:
+If case the node is not registered you can go back to worker-2 node and review kubelet logs:
 `journalctl -u kubelet --since today`
 `journalctl -u kube-proxy --since today`
 
 Optional: At this point you may run the certificate verification script to make sure all certificates are configured correctly. Follow the instructions [here](verify-certificates.md)
 
-Next: [TLS Bootstrapping Kubernetes Workers](10-tls-bootstrapping-kubernetes-workers.md)
+Next: [Configuring Kubectl](11-configuring-kubectl.md)
 
-Previous: [Bootstrapping the Kubernetes Control Plane](08-bootstrapping-kubernetes-controllers.md)
+Previous: [TLS Bootstrapping Kubernetes Workers](10-tls-bootstrapping-kubernetes-workers.md)

@@ -1,6 +1,11 @@
+Previous: [Certificate Authority](04-certificate-authority.md)
+
 # Generating Kubernetes Configuration Files for Authentication
 
 In this lab you will generate [Kubernetes configuration files](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/), also known as kubeconfigs, which enable Kubernetes clients to locate and authenticate to the Kubernetes API Servers.
+
+Kubeconfig files are yaml files manged and used by `kubectl` command. 
+`kubectl config` command is used to create/update kubeconfig files.
 
 ## Client Authentication Configs
 
@@ -10,6 +15,7 @@ In this section you will generate kubeconfig files for the `controller manager`,
 
 Each kubeconfig requires a Kubernetes API Server to connect to. To support high availability the IP address assigned to the load balancer will be used. In our case it is `192.168.5.30`
 
+Run the command below to set the address of LB used in next steps.
 ```
 LOADBALANCER_ADDRESS=192.168.5.30
 ```
@@ -175,3 +181,5 @@ done
 ```
 
 Next: [Generating the Data Encryption Config and Key](06-data-encryption-keys.md)
+
+Previous: [Certificate Authority](04-certificate-authority.md)

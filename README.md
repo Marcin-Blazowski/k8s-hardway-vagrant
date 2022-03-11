@@ -1,17 +1,19 @@
-> This tutorial is a modified version of the original developed by [Kelsey Hightower](https://github.com/kelseyhightower/kubernetes-the-hard-way).
+> This tutorial is a modified version of the original developed by [Mumshad Mannambeth](https://github.com/mmumshad/kubernetes-the-hard-way) who started from [Kelsey Hightower](https://github.com/kelseyhightower/kubernetes-the-hard-way) repository.
 
 # Kubernetes The Hard Way On VirtualBox
 
-This tutorial walks you through setting up Kubernetes the hard way on a local machine using VirtualBox.
-This guide is not for people looking for a fully automated command to bring up a Kubernetes cluster.
-If that's you then check out [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine), or the [Getting Started Guides](http://kubernetes.io/docs/getting-started-guides/).
+This tutorial walks you through setting up Kubernetes the hard way on a local machine using VirtualBox and Vagrant.
+This guide is not for people looking for a fully automated command to bring up a Kubernetes cluster. Anyway the automation is provided: [Lab Automation](./docs/16-lab-automation.md).
+The are for sure better ways to build the cluster. Please check out [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine), or the [Getting Started Guides](http://kubernetes.io/docs/getting-started-guides/).
 
-Kubernetes The Hard Way is optimized for learning, which means taking the long route to ensure you understand each task required to bootstrap a Kubernetes cluster.
+### Kubernetes The Hard Way is optimized for learning, which means taking the long route to ensure you understand each task required to bootstrap a Kubernetes cluster.
 
-This tutorial is a modified version of the original developed by [Kelsey Hightower](https://github.com/kelseyhightower/kubernetes-the-hard-way).
-While the original one uses GCP as the platform to deploy kubernetes,  we use VirtualBox and Vagrant to deploy a cluster on a local machine. If you prefer the cloud version, refer to the original one [here](https://github.com/kelseyhightower/kubernetes-the-hard-way)
+##### If you come into problems while moving through labs you can provision the whole environment with k8s cluster up and running as described in [Lab Automation](./docs/16-lab-automation.md) or try to use automation scripts mentioned in Vagrantfile.auto.
 
-Another difference is that we use Docker instead of containerd. There are a few other differences to the original and they are documented [here](docs/differences-to-original.md)
+This tutorial is a modified version of the original developed by  by [Mumshad Mannambeth](https://github.com/mmumshad/kubernetes-the-hard-way) who started from [Kelsey Hightower](https://github.com/kelseyhightower/kubernetes-the-hard-way) repository.
+
+While the original one has some k8s components' versions hardcoded this one tries to use the latest version if possible.
+Most of other differences are listed here: [Differences](./docs/differences-to-original.md).
 
 > The results of this tutorial should not be viewed as production ready, and may receive limited support from the community, but don't let that stop you from learning!
 
@@ -23,12 +25,17 @@ The target audience for this tutorial is someone planning to support a productio
 
 Kubernetes The Hard Way guides you through bootstrapping a highly available Kubernetes cluster with end-to-end encryption between components and RBAC authentication.
 
-* [Kubernetes](https://github.com/kubernetes/kubernetes) 1.13.0
-* [Docker Container Runtime](https://github.com/containerd/containerd) 18.06
-* [CNI Container Networking](https://github.com/containernetworking/cni) 0.7.5
+* [Ubuntu](https://ubuntu.com/) 18.04, tested with v20220213.0.0 of the Vagrant/Virtualbox "image"
+* [Kubernetes](https://github.com/kubernetes/kubernetes) latest version (tested with 1.23.4)
+* [Docker](https://docs.docker.com) latest version (by https://get.docker.com, tested with 20.10.12)
+* [CNI Container Networking](https://github.com/containernetworking/cni) latest version (tested with 1.0.1)
 * [Weave Networking](https://www.weave.works/docs/net/latest/kubernetes/kube-addon/)
-* [etcd](https://github.com/coreos/etcd) v3.3.9
-* [CoreDNS](https://github.com/coredns/coredns) v1.2.2
+* [etcd](https://github.com/coreos/etcd) latest version (tested with v3.5.2)
+* [CoreDNS](https://github.com/coredns/coredns) latest (tested with v1.9.0)
+
+## Architecture Overview
+
+![Architecture_Overview](./docs/images/architecture_overview.drawio.png)
 
 ## Labs
 
@@ -47,6 +54,5 @@ Kubernetes The Hard Way guides you through bootstrapping a highly available Kube
 * [Kube API Server to Kubelet Configuration](docs/13-kube-apiserver-to-kubelet.md)
 * [Deploying the DNS Cluster Add-on](docs/14-dns-addon.md)
 * [Smoke Test](docs/15-smoke-test.md)
-* [E2E Test](docs/16-e2e-tests.md)
-* [Extra - Dynamic Kubelet Configuration](docs/17-extra-dynamic-kubelet-configuration.md)
+* [Lab Automation](docs/16-lab-automation.md)
 * [Extra - Certificate Verification](docs/verify-certificates.md)

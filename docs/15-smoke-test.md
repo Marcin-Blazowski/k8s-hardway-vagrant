@@ -1,3 +1,5 @@
+Previous: [DNS Addon](14-dns-addon.md)
+
 # Smoke Test
 
 In this lab you will complete a series of tasks to ensure your Kubernetes cluster is functioning correctly.
@@ -142,7 +144,9 @@ kubectl exec -ti $POD_NAME -- nginx -v
 > output
 
 ```
-nginx version: nginx/1.15.9
+nginx version: nginx/1.21.6
 ```
 
-Next: [End to End Tests](16-e2e-tests.md)
+Next: [All labs automated](16-lab-automation.md)
+
+Previous: [DNS Addon](14-dns-addon.md)

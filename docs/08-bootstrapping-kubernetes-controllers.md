@@ -1,3 +1,5 @@
+Previous: [Bootstrapping the etcd Cluster](07-bootstrapping-etcd.md)
+
 # Bootstrapping the Kubernetes Control Plane
 
 In this lab you will bootstrap the Kubernetes control plane across 2 compute instances and configure it for high availability. You will also create an external load balancer that exposes the Kubernetes API Servers to remote clients. The following components will be installed on each node: Kubernetes API Server, Scheduler, and Controller Manager.
@@ -20,14 +22,30 @@ sudo mkdir -p /etc/kubernetes/config
 
 ### Download and Install the Kubernetes Controller Binaries
 
+Get the latest version:
+```
+KUBE_VER=`curl -L -s https://dl.k8s.io/release/stable.txt`
+DOWNLOAD_URL=https://dl.k8s.io/
+```
+
 Download the official Kubernetes release binaries:
 
 ```
+cd /tmp
+
+{
 wget -q --show-progress --https-only --timestamping \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-apiserver" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-controller-manager" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kube-scheduler" \
-  "https://storage.googleapis.com/kubernetes-release/release/v1.13.0/bin/linux/amd64/kubectl"
+  ${DOWNLOAD_URL}/${KUBE_VER}/bin/linux/amd64/kube-apiserver
+
+wget -q --show-progress --https-only --timestamping \
+  ${DOWNLOAD_URL}/${KUBE_VER}/bin/linux/amd64/kube-controller-manager
+
+wget -q --show-progress --https-only --timestamping \
+  ${DOWNLOAD_URL}/${KUBE_VER}/bin/linux/amd64/kube-scheduler
+
+wget -q --show-progress --https-only --timestamping \
+  ${DOWNLOAD_URL}/${KUBE_VER}/bin/linux/amd64/kubectl
+}
 ```
 
 Reference: https://kubernetes.io/docs/setup/release/#server-binaries
@@ -46,6 +64,8 @@ Install the Kubernetes binaries:
 ```
 {
   sudo mkdir -p /var/lib/kubernetes/
+
+  cd $HOME
 
   sudo cp ca.crt ca.key kube-apiserver.crt kube-apiserver.key \
     service-account.key service-account.crt \
@@ -98,9 +118,10 @@ ExecStart=/usr/local/bin/kube-apiserver \\
   --kubelet-certificate-authority=/var/lib/kubernetes/ca.crt \\
   --kubelet-client-certificate=/var/lib/kubernetes/kube-apiserver.crt \\
   --kubelet-client-key=/var/lib/kubernetes/kube-apiserver.key \\
-  --kubelet-https=true \\
   --runtime-config=api/all=true \\
   --service-account-key-file=/var/lib/kubernetes/service-account.crt \\
+  --service-account-signing-key-file=/var/lib/kubernetes/service-account.key \\
+  --service-account-issuer=kubernetes \\
   --service-cluster-ip-range=10.96.0.0/24 \\
   --service-node-port-range=30000-32767 \\
   --tls-cert-file=/var/lib/kubernetes/kube-apiserver.crt \\
@@ -122,7 +143,9 @@ Copy the `kube-controller-manager` kubeconfig into place:
 sudo cp kube-controller-manager.kubeconfig /var/lib/kubernetes/
 ```
 
-Create the `kube-controller-manager.service` systemd unit file:
+Create the `kube-controller-manager.service` systemd unit file.
+I do have some doubts regarding cert files specification below. Please be aware that
+*.crt files contain public keys, *.key files contain private keys ....
 
 ```
 cat <<EOF | sudo tee /etc/systemd/system/kube-controller-manager.service
@@ -200,13 +223,23 @@ EOF
 ```
 kubectl get componentstatuses --kubeconfig admin.kubeconfig
 ```
-
+output:
 ```
 NAME                 STATUS    MESSAGE              ERROR
 controller-manager   Healthy   ok
 scheduler            Healthy   ok
 etcd-0               Healthy   {"health": "true"}
 etcd-1               Healthy   {"health": "true"}
+```
+
+In my first run the above command told me that all runs fine. It was not true.
+You should review logs of api-server, controller-manager, and scheduler.
+You can use commands like below to do this. Use the proper systemd service name.
+
+```
+journalctl -u kube-apiserver
+journalctl -u kube-controller-manager --since today
+journalctl -u kube-scheduler --since today
 ```
 
 > Remember to run the above commands on each controller node: `master-1`, and `master-2`.
@@ -258,15 +291,17 @@ curl  https://192.168.5.30:6443/version -k
 ```
 {
   "major": "1",
-  "minor": "13",
-  "gitVersion": "v1.13.0",
-  "gitCommit": "ddf47ac13c1a9483ea035a79cd7c10005ff21a6d",
+  "minor": "23",
+  "gitVersion": "v1.23.4",
+  "gitCommit": "e6c093d87ea4cbb530a7b2ae91e54c0842d8308a",
   "gitTreeState": "clean",
-  "buildDate": "2018-12-03T20:56:12Z",
-  "goVersion": "go1.11.2",
+  "buildDate": "2022-02-16T12:32:02Z",
+  "goVersion": "go1.17.7",
   "compiler": "gc",
   "platform": "linux/amd64"
 }
 ```
 
 Next: [Bootstrapping the Kubernetes Worker Nodes](09-bootstrapping-kubernetes-workers.md)
+
+Previous: [Bootstrapping the etcd Cluster](07-bootstrapping-etcd.md)
