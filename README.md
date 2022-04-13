@@ -3,9 +3,9 @@
 # Kubernetes The Hard Way On VirtualBox
 
 This tutorial walks you through setting up Kubernetes the hard way on a local machine using VirtualBox and Vagrant.
-This guide is not for people looking for a fully automated command to bring up a Kubernetes cluster. Anyway the automation is provided: [Lab Automation](./docs/16-lab-automation.md).
+This guide is not for people looking for a fully automated command to bring up a Kubernetes cluster, however, the automation is provided: [Lab Automation](./docs/16-lab-automation.md).
 
-If you prefer public cloud you can use another tutorial prepared by me to be run on Azure Cloud: [K8s hard way on Azure](https://github.com/Marcin-Blazowski/k8s-hardway-azure).
+If you prefer public cloud, you can use another tutorial prepared by me to be run on Azure Cloud: [K8s hard way on Azure](https://github.com/Marcin-Blazowski/k8s-hardway-azure).
 
 There are, for sure, better ways to build the cluster. Please check out [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine), or the [Getting Started Guides](http://kubernetes.io/docs/getting-started-guides/).
 
