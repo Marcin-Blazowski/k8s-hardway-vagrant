@@ -6,7 +6,7 @@ Note: You must have VirtualBox and Vagrant configured at this point.
 
 Download this github repository and cd into the vagrant folder
 
-`git clone https://github.kyndryl.net/marcin-blazowski/k8s-hardway-vagrant`
+`git clone https://github.com/Marcin-Blazowski/k8s-hardway-vagrant`
 
 CD into vagrant directory
 
