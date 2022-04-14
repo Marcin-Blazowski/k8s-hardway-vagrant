@@ -1,4 +1,4 @@
-Previous: [Prerequisites](docs/01-prerequisites.md)
+Previous: [Prerequisites](01-prerequisites.md)
 
 # Provisioning Compute Resources
 
