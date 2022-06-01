@@ -56,9 +56,9 @@ sleep 5
 
 # test running nginx
 echo
-curl http://worker-1:$PORT_NUMBER | grep "Welcome"
+curl --connect-timeout 10 http://worker-1:$PORT_NUMBER | grep "Welcome"
 echo
-curl http://worker-2:$PORT_NUMBER | grep "Welcome"
+curl --connect-timeout 10 http://worker-2:$PORT_NUMBER | grep "Welcome"
 echo
 
 # get the pod name

@@ -92,6 +92,8 @@ clusterDNS:
   - "10.96.0.10"
 resolvConf: "/run/systemd/resolve/resolv.conf"
 runtimeRequestTimeout: "15m"
+registerNode: true
+cgroupDriver: "systemd"
 EOF
 
 ## Create the kubelet.service systemd unit file:
@@ -99,20 +101,18 @@ cat <<EOF | sudo tee /etc/systemd/system/kubelet.service
 [Unit]
 Description=Kubernetes Kubelet
 Documentation=https://github.com/kubernetes/kubernetes
-After=docker.service
-Requires=docker.service
+After=containerd.service
+Requires=containerd.service
 
 [Service]
 ExecStart=/usr/local/bin/kubelet \\
   --bootstrap-kubeconfig="/var/lib/kubelet/bootstrap-kubeconfig" \\
   --config=/var/lib/kubelet/kubelet-config.yaml \\
-  --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
+  --container-runtime-endpoint="unix:///run/containerd/containerd.sock"
   --cert-dir=/var/lib/kubelet/pki/ \\
   --rotate-certificates=true \\
   --rotate-server-certificates=true \\
-  --network-plugin=cni \\
-  --register-node=true \\
   --v=2
 Restart=on-failure
 RestartSec=5
@@ -131,7 +131,7 @@ apiVersion: kubeproxy.config.k8s.io/v1alpha1
 clientConnection:
   kubeconfig: "/var/lib/kube-proxy/kubeconfig"
 mode: "iptables"
-clusterCIDR: "192.168.5.0/24"
+clusterCIDR: "10.33.0.0/16"
 EOF
 
 #Create the kube-proxy.service systemd unit file:
@@ -174,3 +174,8 @@ then
 else
   kubectl certificate approve ${CSR_ID}
 fi
+
+sleep 10
+# patch the info about the node in the control plane
+# this is somehow needed by the flannel
+# patch node $(hostname) -p '{"spec":{"podCIDR":"10.33.0.0/16"}}'
