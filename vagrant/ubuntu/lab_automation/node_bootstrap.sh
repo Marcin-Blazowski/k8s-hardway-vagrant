@@ -69,6 +69,11 @@ clusterDNS:
   - "10.96.0.10"
 resolvConf: "/run/systemd/resolve/resolv.conf"
 runtimeRequestTimeout: "15m"
+registerNode: true
+tlsCertFile: "/var/lib/kubelet/${HOSTNAME}.crt"
+tlsPrivateKeyFile: "/var/lib/kubelet/${HOSTNAME}.key"
+cgroupDriver: "systemd"
+podCIDR: "10.33.0.0/16"
 EOF
 
 ## Create the kubelet.service systemd unit file:
@@ -76,18 +81,14 @@ cat <<EOF | sudo tee /etc/systemd/system/kubelet.service
 [Unit]
 Description=Kubernetes Kubelet
 Documentation=https://github.com/kubernetes/kubernetes
-After=docker.service
-Requires=docker.service
+After=containerd.service
+Requires=containerd.service
 
 [Service]
 ExecStart=/usr/local/bin/kubelet \\
   --config=/var/lib/kubelet/kubelet-config.yaml \\
-  --image-pull-progress-deadline=2m \\
   --kubeconfig=/var/lib/kubelet/kubeconfig \\
-  --tls-cert-file=/var/lib/kubelet/${HOSTNAME}.crt \\
-  --tls-private-key-file=/var/lib/kubelet/${HOSTNAME}.key \\
-  --network-plugin=cni \\
-  --register-node=true \\
+  --container-runtime-endpoint="unix:///run/containerd/containerd.sock"
   --v=2
 Restart=on-failure
 RestartSec=5
@@ -106,7 +107,7 @@ apiVersion: kubeproxy.config.k8s.io/v1alpha1
 clientConnection:
   kubeconfig: "/var/lib/kube-proxy/kubeconfig"
 mode: "iptables"
-clusterCIDR: "192.168.5.0/24"
+clusterCIDR: "10.33.0.0/16"
 EOF
 
 #Create the kube-proxy.service systemd unit file:
